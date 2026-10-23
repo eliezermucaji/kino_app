@@ -1,4 +1,7 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../core/kino_theme.dart';
@@ -157,22 +160,33 @@ class KinoHeader extends StatelessWidget {
   }
 }
 
-/// Campo de texto em "pílula" com sombra suave.
+/// Campo de texto em "pílula" com sombra suave e validação.
+///
+/// Se o utilizador tentar avançar com o campo vazio:
+///  - o campo abana de leve (esquerda, direita, esquerda, direita);
+///  - a borda fica vermelha e o aviso (no lugar do texto) também;
+///  - o texto de dica é substituído por [emptyMessage].
+/// Se estiver preenchido mas inválido, o campo também abana, a borda fica
+/// vermelha e a mensagem do [validator] aparece por baixo do campo.
 class KinoTextField extends StatefulWidget {
   final String hint;
+  final String emptyMessage;
   final Widget icon;
   final TextEditingController? controller;
   final TextInputType? keyboardType;
   final bool isPassword;
+  final List<TextInputFormatter>? inputFormatters;
   final String? Function(String?)? validator;
 
   const KinoTextField({
     super.key,
     required this.hint,
     required this.icon,
+    this.emptyMessage = 'Campo Inválido',
     this.controller,
     this.keyboardType,
     this.isPassword = false,
+    this.inputFormatters,
     this.validator,
   });
 
@@ -180,52 +194,163 @@ class KinoTextField extends StatefulWidget {
   State<KinoTextField> createState() => _KinoTextFieldState();
 }
 
-class _KinoTextFieldState extends State<KinoTextField> {
+class _KinoTextFieldState extends State<KinoTextField>
+    with SingleTickerProviderStateMixin {
+  late final TextEditingController _controller;
+  late final bool _ownsController;
+  final FocusNode _focus = FocusNode();
+  late final AnimationController _shake;
+
   bool _obscure = true;
+  bool _emptyError = false;
+  String? _errorMsg;
+
+  @override
+  void initState() {
+    super.initState();
+    _ownsController = widget.controller == null;
+    _controller = widget.controller ?? TextEditingController();
+    _shake = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    // Ao tocar no campo, o aviso de "vazio" desaparece.
+    _focus.addListener(() {
+      setState(() {
+        if (_focus.hasFocus) _emptyError = false;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _shake.dispose();
+    _focus.dispose();
+    if (_ownsController) _controller.dispose();
+    super.dispose();
+  }
+
+  String? _validate(String? _) {
+    final text = _controller.text;
+    final isEmpty = widget.isPassword ? text.isEmpty : text.trim().isEmpty;
+
+    if (isEmpty) {
+      _emptyError = true;
+      _errorMsg = null;
+      _shake.forward(from: 0);
+      return widget.emptyMessage; // não nulo => o Form fica inválido
+    }
+
+    _emptyError = false;
+    _errorMsg = widget.validator?.call(text);
+    if (_errorMsg != null) _shake.forward(from: 0);
+    return _errorMsg;
+  }
+
+  /// Esquerda → direita → esquerda → direita (2 ciclos), leve e rápido.
+  double _shakeOffset() {
+    return -math.sin(_shake.value * 2 * math.pi * 2) * 5;
+  }
+
+  void _clearErrors() {
+    if (_emptyError || _errorMsg != null) {
+      setState(() {
+        _emptyError = false;
+        _errorMsg = null;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: KinoColors.field,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: const [
-          BoxShadow(
-              color: Color(0x33000000), blurRadius: 12, offset: Offset(0, 6)),
-          BoxShadow(
-              color: Colors.white, blurRadius: 10, offset: Offset(-4, -4)),
-        ],
-      ),
-      child: TextFormField(
-        controller: widget.controller,
-        keyboardType: widget.keyboardType,
-        obscureText: widget.isPassword && _obscure,
-        validator: widget.validator,
-        style: GoogleFonts.inter(fontSize: 16, color: Colors.black),
-        decoration: InputDecoration(
-          hintText: widget.hint,
-          hintStyle: GoogleFonts.inter(fontSize: 16, color: Colors.black87),
-          prefixIcon: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: widget.icon,
-          ),
-          prefixIconConstraints: const BoxConstraints(minWidth: 56),
-          suffixIcon: widget.isPassword
-              ? IconButton(
-                  onPressed: () => setState(() => _obscure = !_obscure),
-                  icon: Icon(
-                    _obscure
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
-                    color: KinoColors.eyeOrange,
+    return FormField<String>(
+      validator: _validate,
+      builder: (_) {
+        final highlighted = _emptyError || _errorMsg != null;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AnimatedBuilder(
+              animation: _shake,
+              builder: (context, child) => Transform.translate(
+                offset: Offset(_shakeOffset(), 0),
+                child: child,
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: KinoColors.field,
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(
+                    color: highlighted
+                        ? KinoColors.error
+                        : (_focus.hasFocus ? Colors.black : Colors.transparent),
+                    width: 1.2,
                   ),
-                )
-              : null,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 22),
-          errorStyle: GoogleFonts.inter(fontSize: 11, height: 0.9),
-        ),
-      ),
+                  boxShadow: const [
+                    BoxShadow(
+                        color: Color(0x33000000),
+                        blurRadius: 12,
+                        offset: Offset(0, 6)),
+                    BoxShadow(
+                        color: Colors.white,
+                        blurRadius: 10,
+                        offset: Offset(-4, -4)),
+                  ],
+                ),
+                child: TextField(
+                  controller: _controller,
+                  focusNode: _focus,
+                  keyboardType: widget.keyboardType,
+                  inputFormatters: widget.inputFormatters,
+                  obscureText: widget.isPassword && _obscure,
+                  onChanged: (_) => _clearErrors(),
+                  style: GoogleFonts.inter(fontSize: 16, color: Colors.black),
+                  decoration: InputDecoration(
+                    hintText: _emptyError ? widget.emptyMessage : widget.hint,
+                    hintStyle: GoogleFonts.inter(
+                      fontSize: 16,
+                      color: _emptyError ? KinoColors.error : Colors.black87,
+                    ),
+                    prefixIcon: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: widget.icon,
+                    ),
+                    prefixIconConstraints:
+                        const BoxConstraints(minWidth: 56),
+                    suffixIcon: widget.isPassword
+                        ? IconButton(
+                            onPressed: () =>
+                                setState(() => _obscure = !_obscure),
+                            icon: Icon(
+                              _obscure
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                              color: KinoColors.eyeOrange,
+                            ),
+                          )
+                        : null,
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 22),
+                  ),
+                ),
+              ),
+            ),
+            if (_errorMsg != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 12, 0),
+                child: Text(
+                  _errorMsg!,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: KinoColors.redDark,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }

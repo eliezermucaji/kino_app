@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../core/kino_theme.dart';
+import '../core/validators.dart';
 import '../widgets/kino_widgets.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -77,8 +78,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             icon: const Icon(Icons.person_outline, color: Colors.black, size: 30),
             controller: _email,
             keyboardType: TextInputType.emailAddress,
-            validator: (v) =>
-                (v == null || !v.contains('@')) ? 'Email inválido' : null,
+            emptyMessage: 'Email Inválido',
+            validator: KinoValidators.email,
           ),
           const SizedBox(height: 22),
           KinoButton(

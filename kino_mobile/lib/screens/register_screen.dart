@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+import '../core/validators.dart';
 import '../widgets/kino_widgets.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -41,8 +42,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     debugPrint('Criar conta: ${_email.text}');
   }
 
-  String? _required(String? v) =>
-      (v == null || v.trim().isEmpty) ? 'Campo obrigatório' : null;
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +78,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             hint: 'Nome Completo',
             icon: const Icon(Icons.person_outline, color: Colors.black, size: 30),
             controller: _name,
-            validator: _required,
+            emptyMessage: 'Nome Inválido',
           ),
           const SizedBox(height: 18),
           KinoTextField(
@@ -87,16 +86,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
             icon: const Icon(Icons.mail, color: Colors.black, size: 30),
             controller: _email,
             keyboardType: TextInputType.emailAddress,
-            validator: (v) =>
-                (v == null || !v.contains('@')) ? 'Email inválido' : null,
+            emptyMessage: 'Email Inválido',
+            validator: KinoValidators.email,
           ),
           const SizedBox(height: 18),
           KinoTextField(
             hint: 'Telefone para Chamada',
             icon: const Icon(Icons.phone_in_talk, color: Colors.black, size: 30),
             controller: _phone,
-            keyboardType: TextInputType.phone,
-            validator: _required,
+            keyboardType: TextInputType.number,
+            inputFormatters: KinoValidators.phoneFormatters,
+            emptyMessage: 'Telefone Inválido',
+            validator: KinoValidators.phone,
           ),
           const SizedBox(height: 28),
           KinoButton(
@@ -130,8 +131,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             ),
             controller: _whatsapp,
-            keyboardType: TextInputType.phone,
-            validator: _required,
+            keyboardType: TextInputType.number,
+            inputFormatters: KinoValidators.phoneFormatters,
+            emptyMessage: 'WhatsApp Inválido',
+            validator: KinoValidators.phone,
           ),
           const SizedBox(height: 18),
           KinoTextField(
@@ -139,8 +142,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
             icon: const Icon(Icons.lock, color: Colors.black, size: 30),
             controller: _password,
             isPassword: true,
-            validator: (v) =>
-                (v == null || v.length < 6) ? 'Mínimo 6 caracteres' : null,
+            emptyMessage: 'Senha Inválida',
+            validator: KinoValidators.password,
           ),
           const SizedBox(height: 18),
           KinoTextField(
@@ -148,6 +151,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             icon: const Icon(Icons.lock, color: Colors.black, size: 30),
             controller: _confirm,
             isPassword: true,
+            emptyMessage: 'Confirmação Inválida',
             validator: (v) =>
                 v != _password.text ? 'As senhas não coincidem' : null,
           ),

@@ -7,6 +7,7 @@ class KinoColors {
   static const redDark = Color(0xFFA80F10);
   static const orange = Color(0xFFF08200);
   static const eyeOrange = Color(0xFFE8580C);
+  static const error = Color(0xFFE02424);
 
   static const gradient = LinearGradient(
     colors: [redDark, orange],
