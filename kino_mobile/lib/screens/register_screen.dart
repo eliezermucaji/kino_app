@@ -53,9 +53,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
             title: 'Cria a tua Conta',
             subtitle: 'Cria conta e mata a fome !',
           ),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 250),
-            child: _step == 0 ? _buildStep1() : _buildStep2(),
+          KinoScribbleBehind(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 250),
+              child: _step == 0 ? _buildStep1() : _buildStep2(),
+            ),
           ),
           const KinoDivider('JÁ TEM CONTA ?'),
           KinoButton(

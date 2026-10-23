@@ -28,10 +28,11 @@ class KinoScaffold extends StatelessWidget {
       backgroundColor: KinoColors.background,
       body: Stack(
         children: [
-          Align(
-            alignment: Alignment(1.25, scribbleAtBottom ? 1.1 : 0.25),
-            child: _Deco(KinoAssets.scribble, width: 190),
-          ),
+          if (scribbleAtBottom)
+            Align(
+              alignment: const Alignment(1.25, 1.1),
+              child: _Deco(KinoAssets.scribble, width: 190),
+            ),
           Align(
             alignment: const Alignment(-1.1, 1.05),
             child: Opacity(
@@ -54,6 +55,35 @@ class KinoScaffold extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Coloca o rabisco vermelho atrás do [child] (os campos), preso ao topo dele.
+class KinoScribbleBehind extends StatelessWidget {
+  final Widget child;
+  const KinoScribbleBehind({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned(
+          right: -70,
+          top: -35,
+          child: IgnorePointer(
+            child: Image.asset(
+              KinoAssets.scribble,
+              width: 180,
+              height: 170,
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+            ),
+          ),
+        ),
+        child,
+      ],
     );
   }
 }
@@ -266,6 +296,7 @@ class KinoButton extends StatelessWidget {
 
     return Container(
       height: 64,
+      width: double.infinity,
       decoration: BoxDecoration(
         gradient:
             reversed ? KinoColors.gradientReversed : KinoColors.gradient,

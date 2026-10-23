@@ -40,6 +40,9 @@ class _LoginScreenState extends State<LoginScreen> {
               title: 'Bem Vindo',
               subtitle: 'Faz login e saboreia.',
             ),
+            KinoScribbleBehind(
+              child: Column(
+                children: [
             KinoTextField(
               hint: 'Email',
               icon: const Icon(Icons.person_outline, color: Colors.black, size: 30),
@@ -70,6 +73,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     color: KinoColors.redDark,
                   ),
                 ),
+              ),
+            ),
+                ],
               ),
             ),
             const SizedBox(height: 4),
