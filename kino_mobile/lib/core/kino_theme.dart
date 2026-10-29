@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class KinoColors {
-  static const background = Color(0xFFF6F2DF);
-  static const field = Color(0xFFF5EFD9);
+  static const background = Color(0xFFF7F2DE);
+  static const field = Color(0xFFF8F0DD);
   static const redDark = Color(0xFFA80F10);
   static const orange = Color(0xFFF08200);
   static const eyeOrange = Color(0xFFE8580C);
-  static const error = Color(0xFFE02424);
+  static const error = Color(0xFFB00012); // vermelho escuro, legível sobre o laranja
+  static const panel = Color(0xFFEE550C); // laranja do painel inferior
 
   static const gradient = LinearGradient(
     colors: [redDark, orange],

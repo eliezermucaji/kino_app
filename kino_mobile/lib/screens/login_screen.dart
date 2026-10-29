@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../core/kino_theme.dart';
 import '../core/validators.dart';
 import '../widgets/kino_widgets.dart';
 
@@ -32,30 +31,30 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return KinoScaffold(
-      child: Form(
+    return KinoAuthScaffold(
+      title: 'Bem Vindo',
+      subtitle: 'Faz login e saboreia.',
+      footer: KinoFooterLink(
+        text: 'Não tem conta ?',
+        action: 'Crie uma Conta',
+        onTap: () => Navigator.pushReplacementNamed(context, '/register'),
+      ),
+      body: Form(
         key: _formKey,
         child: Column(
           children: [
-            const KinoHeader(
-              title: 'Bem Vindo',
-              subtitle: 'Faz login e saboreia.',
-            ),
-            KinoScribbleBehind(
-              child: Column(
-                children: [
             KinoTextField(
-              hint: 'Email',
-              icon: const Icon(Icons.person_outline, color: Colors.black, size: 30),
+              hint: 'Insira o seu email',
+              icon: kinoFieldIcon(Icons.mail_outline),
               controller: _email,
               keyboardType: TextInputType.emailAddress,
               emptyMessage: 'Email Inválido',
               validator: KinoValidators.email,
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 12),
             KinoTextField(
-              hint: 'Senha',
-              icon: const Icon(Icons.lock, color: Colors.black, size: 30),
+              hint: 'Insira a sua senha',
+              icon: kinoFieldIcon(Icons.lock_outline),
               controller: _password,
               isPassword: true,
               emptyMessage: 'Senha Inválida',
@@ -70,27 +69,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   'Esqueci a minha Senha',
                   style: GoogleFonts.inter(
                     fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: KinoColors.redDark,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
                   ),
                 ),
               ),
             ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 4),
-            KinoButton(
-              label: 'Entrar',
-              trailingIcon: Icons.arrow_forward,
-              onPressed: _submit,
-            ),
-            const KinoDivider('NÃO TEM CONTA ?'),
-            KinoButton(
-              label: 'Criar Conta',
-              onPressed: () =>
-                  Navigator.pushReplacementNamed(context, '/register'),
-            ),
+            KinoPanelButton(label: 'Entrar', onPressed: _submit),
           ],
         ),
       ),
