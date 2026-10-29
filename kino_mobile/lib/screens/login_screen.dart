@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../core/auth_controller.dart';
 import '../core/validators.dart';
 import '../widgets/kino_widgets.dart';
 
@@ -15,6 +16,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
+  bool _loading = false;
 
   @override
   void dispose() {
@@ -23,10 +25,27 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _submit() {
-    if (!_formKey.currentState!.validate()) return;
-    // TODO: chamar a tua API de autenticação aqui.
-    debugPrint('Login: ${_email.text}');
+  Future<void> _submit() async {
+    if (_loading || !_formKey.currentState!.validate()) return;
+    setState(() => _loading = true);
+    try {
+      await AuthController.instance.login(_email.text.trim(), _password.text);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+      return;
+    }
+    if (!mounted) return;
+    // O login foi aberto por cima da tela de onde o utilizador veio
+    // (Home, produto, perfil...): fechar devolve-o lá, já com sessão.
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    } else {
+      Navigator.pushReplacementNamed(context, '/');
+    }
   }
 
   @override
@@ -75,7 +94,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
-            KinoPanelButton(label: 'Entrar', onPressed: _submit),
+            KinoPanelButton(
+              label: _loading ? 'A entrar...' : 'Entrar',
+              onPressed: _submit,
+            ),
           ],
         ),
       ),

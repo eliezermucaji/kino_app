@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+import '../core/auth_controller.dart';
 import '../core/kino_theme.dart';
 import '../core/validators.dart';
 import '../widgets/kino_widgets.dart';
@@ -25,6 +26,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _confirm = TextEditingController();
 
   int _step = 0;
+  bool _loading = false;
 
   @override
   void dispose() {
@@ -51,11 +53,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  void _createAccount() {
-    // TODO: enviar para a API. Os telefones seguem sem espaços:
-    final phone = KinoValidators.digitsOnly(_phone.text);
-    final whatsapp = KinoValidators.digitsOnly(_whatsapp.text);
-    debugPrint('Criar conta: ${_name.text} | ${_email.text} | $phone | $whatsapp');
+  Future<void> _createAccount() async {
+    if (_loading) return;
+    setState(() => _loading = true);
+    try {
+      await AuthController.instance.register(
+        name: _name.text.trim(),
+        email: _email.text.trim(),
+        // Os telefones seguem sem espaços para a API:
+        phone: KinoValidators.digitsOnly(_phone.text),
+        whatsapp: KinoValidators.digitsOnly(_whatsapp.text),
+        password: _password.text,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+      return;
+    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Conta criada! Faz login.')),
+    );
+    Navigator.pushReplacementNamed(context, '/login');
   }
 
   @override

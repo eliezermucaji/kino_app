@@ -79,7 +79,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     return KinoAuthScaffold(
       title: 'Esqueceu a Senha ?',
-      subtitle: 'Nós ajudamos a recuperar.',
+      subtitle: _step == 0
+          ? 'Nós ajudamos a recuperar.'
+          : 'Insira o código de 6 dígitos que enviamos no seu email.',
       footer: KinoFooterLink(
         text: 'Não tem conta ?',
         action: 'Crie uma Conta',
@@ -124,15 +126,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     return Column(
       key: const ValueKey('code'),
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        _OtpRow(key: _otpKey),
-        const SizedBox(height: 14),
+        // Zona do código: altura mínima fixa, com as caixas centradas
+        // na horizontal e na vertical dentro dela.
+        Container(
+          width: double.infinity,
+          constraints: const BoxConstraints(minHeight: 110),
+          alignment: Alignment.center,
+          child: _OtpRow(key: _otpKey),
+        ),
+        const SizedBox(height: 6),
         canResend
             ? GestureDetector(
                 onTap: _resendCode,
                 child: Text(
                   'Reenviar código',
+                  textAlign: TextAlign.center,
                   style: white.copyWith(
                     fontWeight: FontWeight.w800,
                     decoration: TextDecoration.underline,
@@ -140,7 +150,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                 ),
               )
-            : Text('Reenviar código em $_countdown', style: white),
+            : Text(
+                'Reenviar código em $_countdown',
+                textAlign: TextAlign.center,
+                style: white,
+              ),
         const SizedBox(height: 14),
         KinoPanelButton(label: 'Enviar', onPressed: _verifyCode),
         const SizedBox(height: 10),
@@ -150,8 +164,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 }
 
-/// 6 caixas para o código. Se estiver incompleto ao enviar, abana de leve
-/// e as bordas ficam vermelhas.
+/// 6 caixas para o código, centradas. Se estiver incompleto ao enviar,
+/// abana de leve e as bordas ficam vermelhas.
 class _OtpRow extends StatefulWidget {
   const _OtpRow({super.key});
 
@@ -161,6 +175,8 @@ class _OtpRow extends StatefulWidget {
 
 class _OtpRowState extends State<_OtpRow> with SingleTickerProviderStateMixin {
   static const int _length = 6;
+  static const double _gap = 8;
+  static const double _maxBoxWidth = 48;
 
   final _controllers = List.generate(_length, (_) => TextEditingController());
   final _nodes = List.generate(_length, (_) => FocusNode());
@@ -209,68 +225,88 @@ class _OtpRowState extends State<_OtpRow> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AnimatedBuilder(
-          animation: _shake,
-          builder: (context, child) => Transform.translate(
-            offset: Offset(-math.sin(_shake.value * 2 * math.pi * 2) * 5, 0),
-            child: child,
-          ),
-          child: Row(
-            children: [
-              for (var i = 0; i < _length; i++) ...[
-                if (i > 0) const SizedBox(width: 10),
-                Expanded(child: _box(i)),
-              ],
-            ],
-          ),
-        ),
-        if (_error)
-          Padding(
-            padding: const EdgeInsets.only(top: 6, left: 4),
-            child: Text(
-              'Insere os 6 dígitos do código',
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // As caixas encolhem em ecrãs estreitos para nunca darem overflow.
+        final boxWidth = math.min(
+          _maxBoxWidth,
+          (constraints.maxWidth - _gap * (_length - 1)) / _length,
+        );
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            AnimatedBuilder(
+              animation: _shake,
+              builder: (context, child) => Transform.translate(
+                offset:
+                    Offset(-math.sin(_shake.value * 2 * math.pi * 2) * 5, 0),
+                child: child,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  for (var i = 0; i < _length; i++) ...[
+                    if (i > 0) const SizedBox(width: _gap),
+                    SizedBox(
+                      width: boxWidth,
+                      height: boxWidth * 1.2,
+                      child: _box(i),
+                    ),
+                  ],
+                ],
               ),
             ),
-          ),
-      ],
+            if (_error)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  'Insere os 6 dígitos do código',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 
   Widget _box(int i) {
-    return AspectRatio(
-      aspectRatio: 0.92,
-      child: Container(
-        decoration: BoxDecoration(
-          color: KinoColors.field,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: _error
-                ? KinoColors.error
-                : (_nodes[i].hasFocus ? Colors.black : Colors.transparent),
-            width: 1.2,
-          ),
+    return Container(
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: KinoColors.field,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: _error
+              ? KinoColors.error
+              : (_nodes[i].hasFocus ? Colors.black : Colors.transparent),
+          width: 1.2,
         ),
-        child: TextField(
-          controller: _controllers[i],
-          focusNode: _nodes[i],
-          textAlign: TextAlign.center,
-          keyboardType: TextInputType.number,
-          maxLength: 1,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.w700),
-          decoration: const InputDecoration(
-            counterText: '',
-            border: InputBorder.none,
-          ),
-          onChanged: (v) => _onChanged(i, v),
+      ),
+      child: TextField(
+        controller: _controllers[i],
+        focusNode: _nodes[i],
+        textAlign: TextAlign.center,
+        textAlignVertical: TextAlignVertical.center,
+        keyboardType: TextInputType.number,
+        maxLength: 1,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.w700),
+        decoration: const InputDecoration(
+          isCollapsed: true,
+          counterText: '',
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.zero,
         ),
+        onChanged: (v) => _onChanged(i, v),
       ),
     );
   }
