@@ -11,10 +11,19 @@ class KinoImage extends StatelessWidget {
 
   const KinoImage(this.src, {super.key, this.fit = BoxFit.cover});
 
+  /// Mostra o logo da app (assets/images/kino_logo.png) enquanto não há foto.
   Widget _fallback() => Container(
         color: const Color(0xFFE9DFC3),
         alignment: Alignment.center,
-        child: const Icon(Icons.fastfood, color: KinoColors.panel, size: 36),
+        padding: const EdgeInsets.all(16),
+        child: Image.asset(
+          'assets/images/kino_logo.png',
+          width: 72,
+          height: 72,
+          fit: BoxFit.contain,
+          errorBuilder: (_, __, ___) =>
+              const Icon(Icons.fastfood, color: KinoColors.panel, size: 36),
+        ),
       );
 
   @override

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'core/kino_theme.dart';
+import 'core/page_transitions.dart';
 import 'screens/forgot_password_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_shell.dart';
@@ -16,7 +17,7 @@ class KinoApp extends StatelessWidget {
     return MaterialApp(
       title: 'Kino',
       debugShowCheckedModeBanner: false,
-      theme: KinoTheme.light,
+      theme: KinoTheme.light.copyWith(pageTransitionsTheme: kinoPageTransitions),
       // A app abre direto na Home (sem login).
       initialRoute: '/',
       routes: {

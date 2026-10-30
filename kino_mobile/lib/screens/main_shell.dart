@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/auth_controller.dart';
+import '../core/kino_theme.dart';
 import '../widgets/kino_app_widgets.dart';
 import 'home_screen.dart';
 import 'orders_screen.dart';
@@ -40,18 +41,34 @@ class _MainShellState extends State<MainShell> {
         final protected = _index == _orders || _index == _profile;
         final index = (!_auth.isLoggedIn && protected) ? _home : _index;
 
+        final Widget screen = switch (index) {
+          _home => HomeScreen(onSearchTap: () => _go(_search)),
+          _search => const SearchScreen(),
+          _orders => OrdersScreen(onBack: () => _go(_home)),
+          _profile => ProfileScreen(
+              onBack: () => _go(_home),
+              onLoggedOut: () => setState(() => _index = _home),
+            ),
+          _ => const StoreScreen(),
+        };
+
         return Scaffold(
-          body: switch (index) {
-            _home => HomeScreen(onSearchTap: () => _go(_search)),
-            _search => const SearchScreen(),
-            _orders => OrdersScreen(onBack: () => _go(_home)),
-            _profile => ProfileScreen(
-                onBack: () => _go(_home),
-                onLoggedOut: () => setState(() => _index = _home),
-              ),
-            _ => const StoreScreen(),
-          },
-          bottomNavigationBar: KinoBottomBar(index: index, onTap: _go),
+          // Transição suave ao trocar de aba.
+          body: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 250),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            child: KeyedSubtree(key: ValueKey(index), child: screen),
+          ),
+          // Na aba Perfil os cantos arredondados da barra mostram laranja
+          // (a cor do painel) em vez de creme.
+          bottomNavigationBar: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            color: index == _profile
+                ? KinoColors.panel
+                : KinoColors.background,
+            child: KinoBottomBar(index: index, onTap: _go),
+          ),
         );
       },
     );

@@ -50,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: SizedBox(
               height: 52,
               child: Image.asset(
-                'assets/images/logo.png',
+                'assets/images/kino_logo.png',
                 errorBuilder: (_, __, ___) => Text(
                   'Kino',
                   style: GoogleFonts.inter(

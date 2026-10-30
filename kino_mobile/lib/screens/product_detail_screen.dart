@@ -310,7 +310,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ),
               )
             : Text(
-                'ORDER NOW',
+                'Fazer Pedido',
                 style: GoogleFonts.inter(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,

@@ -16,6 +16,13 @@ class ProfileScreen extends StatelessWidget {
 
   const ProfileScreen({super.key, this.onBack, this.onLoggedOut});
 
+  /// 999999998 -> "999 999 998" (a API guarda sem espaços).
+  String _phone(String raw) {
+    final d = raw.replaceAll(RegExp(r'[^0-9]'), '');
+    if (d.length != 9) return raw;
+    return '${d.substring(0, 3)} ${d.substring(3, 6)} ${d.substring(6)}';
+  }
+
   void _soon(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Em breve')),
@@ -60,8 +67,8 @@ class ProfileScreen extends StatelessWidget {
                     children: [
                       _Field(label: 'Nome', value: user.name),
                       _Field(label: 'Email', value: user.email),
-                      _Field(label: 'Telefone', value: user.phone),
-                      _Field(label: 'Whatsapp', value: user.whatsapp),
+                      _Field(label: 'Telefone', value: _phone(user.phone)),
+                      _Field(label: 'Whatsapp', value: _phone(user.whatsapp)),
                       const _Field(label: 'Senha', value: '*********'),
                       _historyRow(context),
                       const SizedBox(height: 16),
@@ -89,7 +96,10 @@ class ProfileScreen extends StatelessWidget {
           child: Container(
             decoration: const BoxDecoration(
               color: KinoColors.panel,
-              borderRadius: BorderRadius.only(topRight: Radius.circular(36)),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(36),
+                topRight: Radius.circular(36),
+              ),
             ),
           ),
         ),
@@ -160,16 +170,21 @@ class ProfileScreen extends StatelessWidget {
             child: ElevatedButton.icon(
               onPressed: () => _soon(context),
               icon: const Icon(Icons.edit_note, color: KinoColors.panel),
-              label: Text(
-                'Editar Perfil',
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  color: KinoColors.panel,
+              label: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  'Editar Perfil',
+                  maxLines: 1,
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    color: KinoColors.panel,
+                  ),
                 ),
               ),
               iconAlignment: IconAlignment.end,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFBE9BF),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
